@@ -180,7 +180,7 @@ export function WorkspaceViewer({
 			>
 				<header
 					aria-label="File navigation"
-					className="sticky top-0 z-20 flex h-11 shrink-0 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur sm:px-4"
+					className="sticky top-0 z-20 flex h-9 shrink-0 items-center gap-1.5 border-b bg-background/95 px-2 backdrop-blur sm:px-3"
 				>
 					<WorkspaceBreadcrumb
 						entries={workspaceFiles}
