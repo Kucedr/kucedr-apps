@@ -13,3 +13,4 @@ export const workspaceSettingsDefaults: WorkspaceSettings = {
 };
 
 export const workspaceSettingsKey = 'workspace.settings';
+export const workspaceLastOpenedFileKey = 'workspace.last-opened-file';

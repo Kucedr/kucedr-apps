@@ -52,6 +52,7 @@ import { searchWorkspaceEntries } from '@/lib/search';
 import { useNavigationBar } from '@/hooks/navigationbar';
 import {
 	workspaceSettingsDefaults,
+	workspaceLastOpenedFileKey,
 	workspaceSettingsKey,
 	type WorkspaceSettings,
 } from '@/lib/settings';
@@ -77,8 +78,11 @@ export default function App() {
 	const [workspaceLocation, setWorkspaceLocation] = useState('');
 	const [workspaceFiles, setWorkspaceFiles] = useState<WorkspaceTreeEntry[]>([]);
 	const [workspaceLoading, setWorkspaceLoading] = useState(false);
+	const [workspaceInitialLoadComplete, setWorkspaceInitialLoadComplete] = useState(false);
 	const [workspaceError, setWorkspaceError] = useState('');
 	const [selectedWorkspacePath, setSelectedWorkspacePath] = useState<string | null>(null);
+	const [lastOpenedFile, setLastOpenedFile] = useState<string | null>(null);
+	const [lastOpenedFileLoaded, setLastOpenedFileLoaded] = useState(false);
 	const [selectedKind, setSelectedKind] = useState<WorkspaceFileKind | null>(null);
 	const [selectedContent, setSelectedContent] = useState('');
 	const [selectedSavedContent, setSelectedSavedContent] = useState('');
@@ -132,6 +136,7 @@ export default function App() {
 	const allowCloseRef = useRef(false);
 	const deletingScopeRef = useRef<string | null>(null);
 	const selectionRequestRef = useRef(0);
+	const lastFileRestoreAttemptedRef = useRef(false);
 	const selectedEditable = selectedKind !== null && editableWorkspaceKinds.has(selectedKind);
 	const selectedDirty = selectedEditable && selectedContent !== selectedSavedContent;
 	const selectedWorkspaceEntry = useMemo(
@@ -162,6 +167,23 @@ export default function App() {
 		return () => {
 			active = false;
 			unsubscribe();
+		};
+	}, []);
+
+	useEffect(() => {
+		if (!isKucedr()) return;
+		let active = true;
+		void app
+			.getAppStoreValue<unknown>(workspaceLastOpenedFileKey)
+			.then((stored) => {
+				if (!active) return;
+				setLastOpenedFile(typeof stored === 'string' && stored ? stored : null);
+			})
+			.finally(() => {
+				if (active) setLastOpenedFileLoaded(true);
+			});
+		return () => {
+			active = false;
 		};
 	}, []);
 
@@ -276,7 +298,10 @@ export default function App() {
 					setWorkspaceError(error instanceof Error ? error.message : 'Unable to load workspace.');
 			})
 			.finally(() => {
-				if (active) setWorkspaceLoading(false);
+				if (active) {
+					setWorkspaceLoading(false);
+					setWorkspaceInitialLoadComplete(true);
+				}
 			});
 
 		return () => {
@@ -285,6 +310,21 @@ export default function App() {
 			unsubscribe();
 		};
 	}, []);
+
+	useEffect(() => {
+		if (!lastOpenedFileLoaded || !workspaceInitialLoadComplete || lastFileRestoreAttemptedRef.current) {
+			return;
+		}
+		lastFileRestoreAttemptedRef.current = true;
+		if (!lastOpenedFile) return;
+		const entry = findWorkspaceEntry(workspaceFiles, lastOpenedFile);
+		if (entry?.type === 'file') {
+			void selectWorkspaceEntry(entry);
+			return;
+		}
+		setLastOpenedFile(null);
+		if (isKucedr()) void app.deleteAppStoreValue(workspaceLastOpenedFileKey);
+	}, [lastOpenedFile, lastOpenedFileLoaded, workspaceFiles, workspaceInitialLoadComplete]);
 
 	const saveWorkspaceFile = useCallback(
 		async function saveWorkspaceFile(
@@ -402,6 +442,8 @@ export default function App() {
 		selectionRequestRef.current = requestId;
 		const kind = workspaceFileType(entry.path).kind;
 		selectedPathRef.current = entry.path;
+		setLastOpenedFile(entry.path);
+		if (isKucedr()) void app.setAppStoreValue(workspaceLastOpenedFileKey, entry.path);
 		setSelectedWorkspacePath(entry.path);
 		setSelectedKind(kind);
 		selectedContentRef.current = '';
@@ -569,6 +611,10 @@ export default function App() {
 			}
 			if (target.type === 'directory') await agent.deleteWorkspaceDirectory(targetPath);
 			else await agent.deleteWorkspaceFile(targetPath);
+			if (lastOpenedFile && isWorkspacePathWithin(lastOpenedFile, targetPath)) {
+				setLastOpenedFile(null);
+				void app.deleteAppStoreValue(workspaceLastOpenedFileKey);
+			}
 			setWorkspaceFiles((current) => removeWorkspaceEntry(current, targetPath));
 			if (selectedPathRef.current && isWorkspacePathWithin(selectedPathRef.current, targetPath)) {
 				selectionRequestRef.current += 1;
