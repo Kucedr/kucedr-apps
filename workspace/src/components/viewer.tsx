@@ -102,6 +102,7 @@ export function FileViewer({
 								ref={codeEditorRef}
 								key={path}
 								canSave={canSave}
+								fontSize={settings.fontSize}
 								value={content}
 								onChange={onChange}
 								onSave={onSave}
@@ -125,6 +126,7 @@ export function FileViewer({
 				<MermaidEditor
 					canSave={canSave}
 					content={content}
+					fontSize={settings.fontSize}
 					isDark={isDark}
 					onChange={onChange}
 					onFindReady={onFindReady}
