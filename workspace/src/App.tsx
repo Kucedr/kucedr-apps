@@ -693,13 +693,13 @@ export default function App() {
 	function finishSidebarResize(event: PointerEvent<HTMLButtonElement>) {
 		const resize = sidebarResizeRef.current;
 		if (!resize || resize.pointerId !== event.pointerId) return;
+		sidebarResizeRef.current = null;
 		if (event.currentTarget.hasPointerCapture(event.pointerId)) {
 			event.currentTarget.releasePointerCapture(event.pointerId);
 		}
 		document.body.style.cursor = resize.previousCursor;
 		document.body.style.userSelect = resize.previousUserSelect;
 		suppressSidebarResizeClickRef.current = resize.moved;
-		sidebarResizeRef.current = null;
 		setSidebarResizing(false);
 	}
 
