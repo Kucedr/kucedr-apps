@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState, type DragEvent } from 'react';
+import { hotkeysCoreFeature, syncDataLoaderFeature } from '@headless-tree/core';
+import { useTree } from '@headless-tree/react';
 import type { WorkspaceTreeEntry } from '@kucedr/sdk';
 
-import { TreeProvider, TreeView } from '@/components/kibo-ui/tree';
-import { WorkspaceTreeItem } from '@/components/workspace-tree-item';
+import { HeadlessTreeItem } from '@/components/headless-tree-item';
+import { Tree } from '@/components/ui/tree';
 import { cn } from '@/lib/utils';
 import { workspaceMoveError } from '@/lib/drop';
 import { showNativeContextMenu } from '@/lib/menu';
@@ -18,6 +20,8 @@ const hiddenWorkspacePaths = new Set<string>([
 	'SOUL.md',
 	'USER.md',
 ]);
+
+const workspaceRootId = '__workspace_root__';
 
 interface AppSidebarProps {
 	onCreateDirectory: (parentPath: string) => void;
@@ -83,6 +87,35 @@ export function AppSidebar({
 			),
 		[visibleWorkspaceFiles]
 	);
+	const treeEntries = useMemo(() => {
+		const entries = new Map<string, WorkspaceTreeEntry>();
+		const addEntries = (items: WorkspaceTreeEntry[]) => {
+			for (const item of items) {
+				entries.set(item.path, item);
+				if (item.children) addEntries(item.children);
+			}
+		};
+		addEntries(regularFiles);
+		return entries;
+	}, [regularFiles]);
+	const tree = useTree<WorkspaceTreeEntry>({
+		dataLoader: {
+			getChildren: (itemId) =>
+				itemId === workspaceRootId
+					? regularFiles.map((entry) => entry.path)
+					: treeEntries.get(itemId)?.children?.map((entry) => entry.path) ?? [],
+			getItem: (itemId) =>
+				itemId === workspaceRootId
+					? ({ name: 'Workspace', path: workspaceRootId, type: 'directory', children: regularFiles } as WorkspaceTreeEntry)
+					: treeEntries.get(itemId)!,
+		},
+		features: [syncDataLoaderFeature, hotkeysCoreFeature],
+		getItemName: (item) => item.getItemData().name,
+		indent: 14,
+		isItemFolder: (item) => item.getItemData().type === 'directory',
+		rootItemId: workspaceRootId,
+		setExpandedItems: (next) => setExpanded(new Set(typeof next === 'function' ? next([...expanded]) : next)),
+	});
 	useEffect(() => {
 		if (!searchQuery.trim()) return;
 		setExpanded((current) => {
@@ -271,15 +304,11 @@ export function AppSidebar({
 				<p id="workspace-drag-instructions" className="sr-only">
 					Drag files and folders onto a folder or an empty sidebar area to move them.
 				</p>
-				<TreeProvider
-					animateExpand={false}
-					expandedIds={[...expanded]}
+				<Tree
+					className="relative space-y-0.5 before:absolute before:inset-0 before:-ms-1 before:bg-[repeating-linear-gradient(to_right,transparent_0,transparent_calc(var(--tree-indent)-1px),var(--border)_calc(var(--tree-indent)-1px),var(--border)_calc(var(--tree-indent)))]"
 					indent={14}
-					onExpandedChange={(ids) => setExpanded(new Set(ids))}
-					selectedIds={selectedWorkspacePath ? [selectedWorkspacePath] : []}
-					showLines={false}
+					tree={tree}
 				>
-					<TreeView className="space-y-1 p-0" role="tree">
 						{workspaceLoading ? (
 							<div className="px-3 py-2 text-[12px] text-sidebar-muted">Loading files...</div>
 						) : workspaceError ? (
@@ -291,16 +320,16 @@ export function AppSidebar({
 								{searchQuery.trim() ? 'No matching files' : 'No files'}
 							</div>
 						) : (
-							regularFiles.map((entry, index) => (
-								<WorkspaceTreeItem
-									key={entry.path}
-									depth={0}
+							tree.getItems().map((item) => {
+								const entry = item.getItemData();
+								return (
+									<HeadlessTreeItem
+									key={item.getId()}
 									draggedPath={draggedEntry?.path ?? null}
 									dropError={dropError}
 									dropTargetPath={dropTargetPath}
 									entry={entry}
-									expanded={expanded}
-									isLast={index === regularFiles.length - 1}
+									item={item}
 									movingPath={movingPath}
 									onCreateDirectory={onCreateDirectory}
 									onCreateFile={createFile}
@@ -325,13 +354,11 @@ export function AppSidebar({
 										}
 									}}
 									onSelect={onWorkspaceSelect}
-									onToggle={toggleDirectory}
-									selectedPath={selectedWorkspacePath}
 								/>
-							))
+								);
+							})
 						)}
-					</TreeView>
-				</TreeProvider>
+				</Tree>
 				{draggedEntry || dragMessage ? (
 					<p
 						role="status"
