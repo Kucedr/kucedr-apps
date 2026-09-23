@@ -304,7 +304,7 @@ export function AppSidebar({
 					Drag files and folders onto a folder or an empty sidebar area to move them.
 				</p>
 				<Tree
-					className="relative space-y-0.5 before:absolute before:inset-0 before:-ms-1 before:bg-[repeating-linear-gradient(to_right,transparent_0,transparent_calc(var(--tree-indent)-1px),var(--border)_calc(var(--tree-indent)-1px),var(--border)_calc(var(--tree-indent)))]"
+					className="space-y-0.5"
 					indent={14}
 					tree={tree}
 				>
