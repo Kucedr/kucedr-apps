@@ -144,6 +144,7 @@ export function AppSidebar({
 			return next;
 		});
 	}, [renameTarget]);
+	const treeItems = tree.getItems().filter((item) => treeEntries.has(item.getId()));
 
 	function createFile(parentPath: string) {
 		if (parentPath) setExpanded((current) => new Set(current).add(parentPath));
@@ -319,7 +320,7 @@ export function AppSidebar({
 								{searchQuery.trim() ? 'No matching files' : 'No files'}
 							</div>
 						) : (
-							tree.getItems().map((item) => {
+							treeItems.map((item) => {
 								const entry = item.getItemData();
 								return (
 									<HeadlessTreeItem
