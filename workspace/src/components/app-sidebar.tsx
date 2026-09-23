@@ -141,15 +141,6 @@ export function AppSidebar({
 		if (parentPath) setExpanded((current) => new Set(current).add(parentPath));
 		onCreateFile(parentPath);
 	}
-	function toggleDirectory(path: string) {
-		setExpanded((current) => {
-			const next = new Set(current);
-			if (next.has(path)) next.delete(path);
-			else next.add(path);
-			return next;
-		});
-	}
-
 	function startDrag(event: DragEvent<HTMLElement>, entry: WorkspaceTreeEntry) {
 		event.dataTransfer.effectAllowed = 'move';
 		event.dataTransfer.setData('application/x-kucedr-workspace-entry', entry.path);
