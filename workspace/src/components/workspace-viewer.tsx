@@ -295,8 +295,27 @@ export function WorkspaceViewer({
 					className="flex min-h-8 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-t bg-muted/20 px-2 py-1 sm:px-3"
 				>
 					<FileInformation file={file} />
+					<div className="ml-auto flex self-center items-center gap-2">
+						{textFile && !loading ? (
+							<label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+								<span>Font</span>
+								<Input
+									type="number"
+									min={10}
+									max={24}
+									value={settings.fontSize}
+									aria-label="Editor font size"
+									className="h-7 w-14 text-xs"
+									onChange={(event) =>
+										onFontSizeChange(
+											Math.min(24, Math.max(10, Number(event.target.value) || 10))
+										)
+									}
+								/>
+							</label>
+						) : null}
 					{kind === 'image' && !loading ? (
-						<div className="ml-auto flex self-center items-center gap-1">
+						<div className="flex items-center gap-1">
 							<Button
 								type="button"
 								variant="ghost"
@@ -339,7 +358,7 @@ export function WorkspaceViewer({
 						</div>
 					) : null}
 					{kind === 'markdown' && !loading ? (
-						<div className="ml-auto flex self-center items-center">
+						<div className="flex items-center">
 							<FormatToggle
 								formatted={markdownMode === 'preview'}
 								onFormattedChange={(formatted) =>
@@ -348,6 +367,7 @@ export function WorkspaceViewer({
 							/>
 						</div>
 					) : null}
+					</div>
 				</footer>
 			</section>
 		</Tabs>
