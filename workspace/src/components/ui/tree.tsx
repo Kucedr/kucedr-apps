@@ -13,7 +13,7 @@ export function Tree({
 	indent = 20,
 	tree,
 	...props
-}: HTMLAttributes<HTMLDivElement> & { indent?: number; tree: TreeInstance<unknown> }) {
+}: HTMLAttributes<HTMLDivElement> & { indent?: number; tree: TreeInstance<any> }) {
 	return (
 		<TreeContext.Provider value={{ indent }}>
 			<div
@@ -31,7 +31,7 @@ export function TreeItem({
 	className,
 	item,
 	...props
-}: HTMLAttributes<HTMLDivElement> & { item: ItemInstance<unknown> }) {
+}: HTMLAttributes<HTMLDivElement> & { item: ItemInstance<any> }) {
 	const tree = useContext(TreeContext);
 	const itemProps = item.getProps();
 	return (
