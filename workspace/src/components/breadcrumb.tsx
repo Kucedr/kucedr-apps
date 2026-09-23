@@ -6,7 +6,6 @@ import type { WorkspaceTreeEntry } from '@kucedr/sdk';
 
 import { Button } from '@/components/ui/button';
 import { BreadcrumbTreeItem } from '@/components/breadcrumb-tree-item';
-import { WorkspaceBreadcrumbItem } from '@/components/breadcrumb-item';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tree } from '@/components/ui/tree';
 import { findWorkspaceEntry } from '@/lib/find';
@@ -83,6 +82,7 @@ export function WorkspaceBreadcrumb({
 	const segments = path.split(/[\\/]/).filter(Boolean);
 	const separator = path.includes('\\') ? '\\' : '/';
 	const [treeOpen, setTreeOpen] = React.useState(false);
+	const [segmentTreePath, setSegmentTreePath] = React.useState<string | null>(null);
 	return (
 		<nav aria-label="File path" className="flex min-w-0 flex-1 items-center overflow-hidden text-xs">
 			<DropdownMenu open={treeOpen} onOpenChange={setTreeOpen}>
@@ -120,7 +120,10 @@ export function WorkspaceBreadcrumb({
 								{segment}
 							</span>
 						) : (
-							<DropdownMenu>
+							<DropdownMenu
+								open={segmentTreePath === segmentPath}
+								onOpenChange={(open) => setSegmentTreePath(open ? segmentPath : null)}
+							>
 								<DropdownMenuTrigger asChild>
 									<Button
 										type="button"
@@ -132,14 +135,14 @@ export function WorkspaceBreadcrumb({
 										{segment}
 									</Button>
 								</DropdownMenuTrigger>
-								<DropdownMenuContent align="start" className="max-h-80 min-w-56 overflow-y-auto">
-									{items.map((item) => (
-										<WorkspaceBreadcrumbItem
-											key={item.path}
-											entry={item}
-											onFileSelect={onFileSelect}
-										/>
-									))}
+								<DropdownMenuContent align="start" className="max-h-80 min-w-56 overflow-y-auto p-0">
+									<WorkspaceBreadcrumbTree
+										entries={items}
+										onFileSelect={(entry) => {
+											setSegmentTreePath(null);
+											onFileSelect(entry);
+										}}
+									/>
 								</DropdownMenuContent>
 							</DropdownMenu>
 						)}
