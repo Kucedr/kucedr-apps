@@ -214,7 +214,7 @@ export default function App() {
 				return;
 			}
 			const canFindInSelectedFile =
-				selectedKind === 'text' || (selectedKind === 'markdown' && markdownMode === 'source');
+				selectedKind === 'text' || selectedKind === 'markdown' || selectedKind === 'mermaid';
 			if (activeElement?.closest('[aria-label="Workspace file"]') && canFindInSelectedFile) {
 				setFileFindRequest((request) => request + 1);
 				return;

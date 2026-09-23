@@ -2,7 +2,8 @@ import { AlertCircle, LoaderCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { RenderResult } from 'mermaid';
 
-import { CodeMirrorEditor } from '@/components/code-mirror-editor';
+import { CodeMirrorEditor, type CodeMirrorEditorHandle } from '@/components/code-mirror-editor';
+import type { FileFindControls } from '@/components/viewer';
 import { renderMermaid } from '@/lib/mermaid';
 
 interface MermaidEditorProps {
@@ -10,6 +11,7 @@ interface MermaidEditorProps {
 	content: string;
 	isDark: boolean;
 	onChange: (content: string) => void;
+	onFindReady?: (controls: FileFindControls | null) => void;
 	onSave: () => Promise<boolean>;
 	path: string;
 }
@@ -19,6 +21,7 @@ export default function MermaidEditor({
 	content,
 	isDark,
 	onChange,
+	onFindReady,
 	onSave,
 	path,
 }: MermaidEditorProps) {
@@ -27,7 +30,16 @@ export default function MermaidEditor({
 	const [rendering, setRendering] = useState(false);
 	const [bindFunctions, setBindFunctions] = useState<RenderResult['bindFunctions']>();
 	const previewRef = useRef<HTMLDivElement>(null);
+	const codeEditorRef = useRef<CodeMirrorEditorHandle>(null);
 	const generation = useRef(0);
+
+	useEffect(() => {
+		onFindReady?.({
+			clear: () => codeEditorRef.current?.clearSearch(),
+			find: (query, direction) => codeEditorRef.current?.find(query, direction),
+		});
+		return () => onFindReady?.(null);
+	}, [onFindReady]);
 
 	useEffect(() => {
 		const current = ++generation.current;
@@ -73,6 +85,7 @@ export default function MermaidEditor({
 				</header>
 				<div className="min-h-0 flex-1 overflow-hidden px-4 py-3">
 					<CodeMirrorEditor
+						ref={codeEditorRef}
 						key={path}
 						canSave={canSave}
 						className="h-full min-h-0 [&_.cm-content]:min-h-full [&_.cm-editor]:h-full"

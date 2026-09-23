@@ -71,7 +71,7 @@ export function WorkspaceViewer({
 	const [fileFindControls, setFileFindControls] = useState<FileFindControls | null>(null);
 	const [findOpen, setFindOpen] = useState(false);
 	const [findQuery, setFindQuery] = useState('');
-	const searchable = kind === 'text' || (kind === 'markdown' && markdownMode === 'source');
+	const searchable = kind === 'text' || kind === 'markdown' || kind === 'mermaid';
 	const findMatchCount = useMemo(() => countMatches(content, findQuery), [content, findQuery]);
 	const onFindReady = useCallback((controls: FileFindControls | null) => {
 		setFileFindControls(controls);
@@ -82,8 +82,9 @@ export function WorkspaceViewer({
 		fileFindControls?.clear();
 	}, [fileFindControls]);
 	const openFind = useCallback(() => {
+		if (kind === 'markdown' && markdownMode !== 'source') onMarkdownModeChange('source');
 		setFindOpen(true);
-	}, []);
+	}, [kind, markdownMode, onMarkdownModeChange]);
 	const updateFindQuery = useCallback(
 		(query: string) => {
 			setFindQuery(query);
@@ -98,8 +99,10 @@ export function WorkspaceViewer({
 	}, [clearFind, path]);
 
 	useEffect(() => {
-		if (findRequest > 0 && searchable) setFindOpen(true);
-	}, [findRequest, searchable]);
+		if (findRequest <= 0 || !searchable) return;
+		if (kind === 'markdown' && markdownMode !== 'source') onMarkdownModeChange('source');
+		setFindOpen(true);
+	}, [findRequest, kind, markdownMode, onMarkdownModeChange, searchable]);
 
 	useEffect(() => {
 		if (!editable) return;

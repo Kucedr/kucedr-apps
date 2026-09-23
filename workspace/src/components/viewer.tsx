@@ -76,7 +76,7 @@ export function FileViewer({
 
 	useEffect(() => {
 		if (kind !== 'markdown' && kind !== 'text') {
-			onFindReady?.(null);
+			if (kind !== 'mermaid') onFindReady?.(null);
 			return;
 		}
 		onFindReady?.({
@@ -125,6 +125,7 @@ export function FileViewer({
 					content={content}
 					isDark={isDark}
 					onChange={onChange}
+					onFindReady={onFindReady}
 					onSave={onSave}
 					path={path}
 				/>
