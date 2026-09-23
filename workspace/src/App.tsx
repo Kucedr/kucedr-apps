@@ -777,8 +777,10 @@ export default function App() {
 		<TooltipProvider delayDuration={400}>
 			<SidebarProvider
 				className="flex h-dvh min-h-[520px] overflow-hidden bg-background text-foreground"
+				data-resizing={sidebarResizing || undefined}
 				onOpenChange={setSidebarVisibility}
 				open={sidebarOpen}
+				style={{ '--sidebar-width': `${sidebarWidth}px` } as CSSProperties}
 				onContextMenu={(event) => {
 					showNativeContextMenu(
 						event,
@@ -800,7 +802,7 @@ export default function App() {
 					);
 				}}
 			>
-				<Sidebar id="workspace-sidebar" collapsible="offcanvas" width={sidebarWidth}>
+				<Sidebar id="workspace-sidebar" collapsible="offcanvas">
 					<div
 						className="flex h-12 shrink-0 items-center gap-1 border-b border-sidebar-border px-2"
 						style={{ WebkitAppRegion: 'drag' } as CSSProperties}
@@ -876,6 +878,16 @@ export default function App() {
 					</SidebarFooter>
 					<SidebarResizeHandle
 						onPointerDown={startSidebarResize}
+						onPointerMove={resizeSidebar}
+						onPointerUp={finishSidebarResize}
+						onPointerCancel={finishSidebarResize}
+						onLostPointerCapture={finishSidebarResize}
+						onClick={(event) => {
+							if (!suppressSidebarResizeClickRef.current) return;
+							event.preventDefault();
+							event.stopPropagation();
+							suppressSidebarResizeClickRef.current = false;
+						}}
 						onContextMenu={(event) => {
 							showNativeContextMenu(
 								event,
