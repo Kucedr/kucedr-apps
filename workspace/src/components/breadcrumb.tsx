@@ -3,6 +3,16 @@ import { ChevronRight, Folder } from 'lucide-react';
 import type { WorkspaceTreeEntry } from '@kucedr/sdk';
 
 import { Button } from '@/components/ui/button';
+import {
+	TreeExpander,
+	TreeIcon,
+	TreeLabel,
+	TreeNode,
+	TreeNodeContent,
+	TreeNodeTrigger,
+	TreeProvider,
+	TreeView,
+} from '@/components/kibo-ui/tree';
 import { WorkspaceBreadcrumbItem } from '@/components/breadcrumb-item';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { findWorkspaceEntry } from '@/lib/find';
@@ -13,6 +23,43 @@ interface WorkspaceBreadcrumbProps {
 	path: string;
 }
 
+function WorkspaceBreadcrumbTree({
+	entries,
+	onFileSelect,
+}: Pick<WorkspaceBreadcrumbProps, 'entries' | 'onFileSelect'>) {
+	const renderEntry = (entry: WorkspaceTreeEntry, depth: number, isLast: boolean): React.ReactNode => {
+		const children = entry.children ?? [];
+		const isDirectory = entry.type === 'directory';
+		const hasChildren = children.length > 0;
+		return (
+			<TreeNode key={entry.path} isLast={isLast} level={depth} nodeId={entry.path}>
+				<TreeNodeTrigger
+					expandOnClick={isDirectory}
+					className="mx-0 h-7 gap-1.5 rounded-sm px-1.5 py-0 text-xs"
+					onClick={() => {
+						if (!isDirectory) onFileSelect(entry);
+					}}
+				>
+					<TreeExpander hasChildren={hasChildren} />
+					<TreeIcon hasChildren={isDirectory} className="mr-1.5" />
+					<TreeLabel className="text-xs">{entry.name}</TreeLabel>
+				</TreeNodeTrigger>
+				<TreeNodeContent hasChildren={hasChildren}>
+					{children.map((child, index) => renderEntry(child, depth + 1, index === children.length - 1))}
+				</TreeNodeContent>
+			</TreeNode>
+		);
+	};
+
+	return (
+		<TreeProvider animateExpand={false} selectable={false} showLines={false}>
+			<TreeView className="p-1" role="tree">
+				{entries.map((entry, index) => renderEntry(entry, 0, index === entries.length - 1))}
+			</TreeView>
+		</TreeProvider>
+	);
+}
+
 export function WorkspaceBreadcrumb({
 	entries,
 	onFileSelect,
@@ -20,9 +67,10 @@ export function WorkspaceBreadcrumb({
 }: WorkspaceBreadcrumbProps) {
 	const segments = path.split(/[\\/]/).filter(Boolean);
 	const separator = path.includes('\\') ? '\\' : '/';
+	const [treeOpen, setTreeOpen] = React.useState(false);
 	return (
 		<nav aria-label="File path" className="flex min-w-0 flex-1 items-center overflow-hidden text-xs">
-			<DropdownMenu>
+			<DropdownMenu open={treeOpen} onOpenChange={setTreeOpen}>
 				<DropdownMenuTrigger asChild>
 					<Button
 						type="button"
@@ -34,14 +82,14 @@ export function WorkspaceBreadcrumb({
 						<Folder />
 					</Button>
 				</DropdownMenuTrigger>
-				<DropdownMenuContent align="start" className="max-h-80 min-w-56 overflow-y-auto">
-					{entries.map((entry) => (
-						<WorkspaceBreadcrumbItem
-							key={entry.path}
-							entry={entry}
-							onFileSelect={onFileSelect}
-						/>
-					))}
+				<DropdownMenuContent align="start" className="max-h-80 min-w-64 overflow-y-auto p-0">
+					<WorkspaceBreadcrumbTree
+						entries={entries}
+						onFileSelect={(entry) => {
+							setTreeOpen(false);
+							onFileSelect(entry);
+						}}
+					/>
 				</DropdownMenuContent>
 			</DropdownMenu>
 			{segments.map((segment, index) => {
