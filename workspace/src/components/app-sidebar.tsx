@@ -109,7 +109,7 @@ export function AppSidebar({
 			};
 		}
 		void app
-			.getAppStoreValue<unknown>(workspaceExpandedFoldersKey)
+			.getAppStoreValue<string[]>(workspaceExpandedFoldersKey)
 			.then((stored) => {
 				if (!active || !Array.isArray(stored)) return;
 				setExpanded(new Set(stored.filter((path): path is string => typeof path === 'string')));

@@ -174,11 +174,12 @@ export default function App() {
 		if (!isKucedr()) return;
 		let active = true;
 		void app
-			.getAppStoreValue<unknown>(workspaceLastOpenedFileKey)
+			.getAppStoreValue<string>(workspaceLastOpenedFileKey)
 			.then((stored) => {
 				if (!active) return;
 				setLastOpenedFile(typeof stored === 'string' && stored ? stored : null);
 			})
+			.catch(() => undefined)
 			.finally(() => {
 				if (active) setLastOpenedFileLoaded(true);
 			});
