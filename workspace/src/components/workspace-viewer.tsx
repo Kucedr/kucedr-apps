@@ -194,7 +194,7 @@ export function WorkspaceViewer({
 						findOpen ? (
 							<Find
 								autoFocus
-								className="ml-auto w-full max-w-md"
+								className="ml-auto"
 								matchCount={findMatchCount}
 								onClose={clearFind}
 								onNext={() => fileFindControls?.find(findQuery, 'next')}

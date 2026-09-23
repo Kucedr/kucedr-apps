@@ -46,7 +46,7 @@ export function Find({
 				}}
 				placeholder="Find in file"
 				aria-label="Find in file"
-				className="h-8 min-w-0 rounded-none border-0 bg-transparent px-2 text-xs shadow-none focus-visible:ring-0"
+				className="h-7 w-32 shrink-0 rounded-none border-0 bg-muted/70 px-2 text-xs shadow-none focus-visible:ring-0 sm:w-40"
 			/>
 			<span className="shrink-0 px-1 text-[11px] tabular-nums text-muted-foreground" aria-live="polite">
 				{query ? `${matchCount} ${matchCount === 1 ? 'match' : 'matches'}` : 'Find'}
