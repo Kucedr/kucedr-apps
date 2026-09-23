@@ -122,6 +122,9 @@ export function AppSidebar({
 		setExpandedItems,
 	});
 	useEffect(() => {
+		tree.rebuildTree();
+	}, [regularFiles, tree]);
+	useEffect(() => {
 		if (!searchQuery.trim()) return;
 		setExpanded((current) => {
 			const next = new Set(current);
