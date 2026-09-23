@@ -44,6 +44,7 @@ export interface FileFindControls {
 interface FileViewerProps {
 	canSave: boolean;
 	content: string;
+	imageZoom: number;
 	isDark: boolean;
 	kind: WorkspaceFileKind;
 	onChange: (content: string) => void;
@@ -57,6 +58,7 @@ interface FileViewerProps {
 export function FileViewer({
 	canSave,
 	content,
+	imageZoom,
 	isDark,
 	kind,
 	onChange,
@@ -177,7 +179,7 @@ export function FileViewer({
 	if (kind === 'image') {
 		return (
 			<div
-				className="flex min-h-full items-center justify-center bg-muted/25 p-6 sm:p-10"
+				className="flex min-h-full items-center justify-center overflow-auto bg-muted/25 p-6 sm:p-10"
 				onContextMenu={(event) => {
 					showNativeContextMenu(
 						event,
@@ -196,7 +198,8 @@ export function FileViewer({
 				<img
 					src={url}
 					alt={name}
-					className="max-h-[calc(100dvh-8rem)] max-w-full rounded-md object-contain shadow-sm"
+					className="max-h-[calc(100dvh-8rem)] max-w-full origin-center rounded-md object-contain shadow-sm transition-transform duration-150"
+					style={{ transform: `scale(${imageZoom})` }}
 				/>
 			</div>
 		);

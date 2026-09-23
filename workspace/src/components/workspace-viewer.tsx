@@ -1,4 +1,4 @@
-import { FileWarning, FileText, LoaderCircle, Search } from 'lucide-react';
+import { FileWarning, FileText, LoaderCircle, RotateCcw, Search, ZoomIn, ZoomOut } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { WorkspaceFileKind, WorkspaceTreeEntry } from '@kucedr/sdk';
 import type { WorkspaceSettings } from '@/lib/settings';
@@ -22,6 +22,9 @@ const editableWorkspaceKinds = new Set<WorkspaceFileKind>([
 	'tldraw',
 	'text',
 ]);
+const minimumImageZoom = 0.25;
+const maximumImageZoom = 3;
+const imageZoomStep = 0.25;
 
 interface WorkspaceViewerProps {
 	content: string;
@@ -71,6 +74,7 @@ export function WorkspaceViewer({
 	const [fileFindControls, setFileFindControls] = useState<FileFindControls | null>(null);
 	const [findOpen, setFindOpen] = useState(false);
 	const [findQuery, setFindQuery] = useState('');
+	const [imageZoom, setImageZoom] = useState(1);
 	const searchable = kind === 'text' || kind === 'markdown' || kind === 'mermaid';
 	const findMatchCount = useMemo(() => countMatches(content, findQuery), [content, findQuery]);
 	const onFindReady = useCallback((controls: FileFindControls | null) => {
@@ -97,6 +101,34 @@ export function WorkspaceViewer({
 	useEffect(() => {
 		clearFind();
 	}, [clearFind, path]);
+
+	useEffect(() => {
+		if (kind === 'image') setImageZoom(1);
+	}, [kind, path]);
+
+	useEffect(() => {
+		if (kind !== 'image') return;
+		const handleImageZoomShortcut = (event: KeyboardEvent) => {
+			if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+			if (event.target instanceof HTMLElement && event.target.closest('input, textarea, [contenteditable="true"]')) {
+				return;
+			}
+			if (event.key === '+' || event.key === '=') {
+				event.preventDefault();
+				setImageZoom((zoom) => Math.min(maximumImageZoom, zoom + imageZoomStep));
+			}
+			if (event.key === '-') {
+				event.preventDefault();
+				setImageZoom((zoom) => Math.max(minimumImageZoom, zoom - imageZoomStep));
+			}
+			if (event.key === '0') {
+				event.preventDefault();
+				setImageZoom(1);
+			}
+		};
+		window.addEventListener('keydown', handleImageZoomShortcut);
+		return () => window.removeEventListener('keydown', handleImageZoomShortcut);
+	}, [kind]);
 
 	useEffect(() => {
 		if (findRequest <= 0 || !searchable) return;
@@ -242,6 +274,7 @@ export function WorkspaceViewer({
 							canSave={dirty && !saving}
 							content={content}
 							isDark={isDark}
+							imageZoom={imageZoom}
 							kind={kind}
 							onChange={onChange}
 							onSave={onSave}
@@ -258,6 +291,49 @@ export function WorkspaceViewer({
 					className="flex min-h-8 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-t bg-muted/20 px-2 py-1 sm:px-3"
 				>
 					<FileInformation file={file} />
+					{kind === 'image' && !loading ? (
+						<div className="ml-auto flex self-center items-center gap-1">
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon"
+								className="size-7"
+								aria-label="Zoom out"
+								title="Zoom out (-)"
+								disabled={imageZoom <= minimumImageZoom}
+								onClick={() => setImageZoom((zoom) => Math.max(minimumImageZoom, zoom - imageZoomStep))}
+							>
+								<ZoomOut />
+							</Button>
+							<span className="w-9 text-center text-[11px] tabular-nums text-muted-foreground">
+								{Math.round(imageZoom * 100)}%
+							</span>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon"
+								className="size-7"
+								aria-label="Zoom in"
+								title="Zoom in (+)"
+								disabled={imageZoom >= maximumImageZoom}
+								onClick={() => setImageZoom((zoom) => Math.min(maximumImageZoom, zoom + imageZoomStep))}
+							>
+								<ZoomIn />
+							</Button>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon"
+								className="size-7"
+								aria-label="Reset image zoom"
+								title="Reset zoom (0)"
+								disabled={imageZoom === 1}
+								onClick={() => setImageZoom(1)}
+							>
+								<RotateCcw />
+							</Button>
+						</div>
+					) : null}
 					{kind === 'markdown' && !loading ? (
 						<div className="ml-auto flex self-center items-center">
 							<FormatToggle
