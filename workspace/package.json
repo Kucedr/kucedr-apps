@@ -26,7 +26,7 @@
 		"@excalidraw/excalidraw": "^0.18.1",
 		"@iconify-json/logos": "^1.2.14",
 		"@iconify-json/mdi": "^1.2.3",
-		"@kucedr/sdk": "file:../../../packages/sdk",
+		"@kucedr/sdk": "file:../../kucedr/packages/sdk",
 		"@lezer/highlight": "^1.2.3",
 		"@mermaid-js/layout-elk": "^0.2.2",
 		"@mermaid-js/layout-tidy-tree": "^1.0.0",

@@ -1,4 +1,4 @@
-import type { WorkspaceTreeEntry } from '../../../../../src/shared/agent_types';
+import type { WorkspaceTreeEntry } from '@kucedr/sdk';
 import { formatFileSize } from '../lib/size';
 
 interface FileInformationProps {

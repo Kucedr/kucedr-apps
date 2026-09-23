@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Folder } from 'lucide-react';
 import type { WorkspaceTreeEntry } from '@kucedr/sdk';
 
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,28 @@ export function WorkspaceBreadcrumb({
 	const separator = path.includes('\\') ? '\\' : '/';
 	return (
 		<nav aria-label="File path" className="flex min-w-0 flex-1 items-center overflow-hidden text-xs">
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						className="mr-1 size-7 shrink-0"
+						aria-label="Browse workspace root"
+					>
+						<Folder />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="start" className="max-h-80 min-w-56 overflow-y-auto">
+					{entries.map((entry) => (
+						<WorkspaceBreadcrumbItem
+							key={entry.path}
+							entry={entry}
+							onFileSelect={onFileSelect}
+						/>
+					))}
+				</DropdownMenuContent>
+			</DropdownMenu>
 			{segments.map((segment, index) => {
 				const segmentPath = segments.slice(0, index + 1).join(separator);
 				const isFile = index === segments.length - 1;
