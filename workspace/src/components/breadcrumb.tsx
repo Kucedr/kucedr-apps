@@ -1,21 +1,17 @@
 import * as React from 'react';
+import { hotkeysCoreFeature, syncDataLoaderFeature } from '@headless-tree/core';
+import { useTree } from '@headless-tree/react';
 import { ChevronRight, Folder } from 'lucide-react';
 import type { WorkspaceTreeEntry } from '@kucedr/sdk';
 
 import { Button } from '@/components/ui/button';
-import {
-	TreeExpander,
-	TreeIcon,
-	TreeLabel,
-	TreeNode,
-	TreeNodeContent,
-	TreeNodeTrigger,
-	TreeProvider,
-	TreeView,
-} from '@/components/kibo-ui/tree';
+import { BreadcrumbTreeItem } from '@/components/breadcrumb-tree-item';
 import { WorkspaceBreadcrumbItem } from '@/components/breadcrumb-item';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Tree } from '@/components/ui/tree';
 import { findWorkspaceEntry } from '@/lib/find';
+
+const breadcrumbRootId = '__breadcrumb_root__';
 
 interface WorkspaceBreadcrumbProps {
 	entries: WorkspaceTreeEntry[];
@@ -27,36 +23,55 @@ function WorkspaceBreadcrumbTree({
 	entries,
 	onFileSelect,
 }: Pick<WorkspaceBreadcrumbProps, 'entries' | 'onFileSelect'>) {
-	const renderEntry = (entry: WorkspaceTreeEntry, depth: number, isLast: boolean): React.ReactNode => {
-		const children = entry.children ?? [];
-		const isDirectory = entry.type === 'directory';
-		const hasChildren = children.length > 0;
-		return (
-			<TreeNode key={entry.path} isLast={isLast} level={depth} nodeId={entry.path}>
-				<TreeNodeTrigger
-					expandOnClick={hasChildren}
-					className="mx-0 h-7 gap-1.5 rounded-sm px-1.5 py-0 text-xs"
-					onClick={() => {
-						if (!isDirectory) onFileSelect(entry);
-					}}
-				>
-					<TreeExpander hasChildren={hasChildren} />
-					<TreeIcon hasChildren={isDirectory} className="mr-1.5" />
-					<TreeLabel className="text-xs">{entry.name}</TreeLabel>
-				</TreeNodeTrigger>
-				<TreeNodeContent hasChildren={hasChildren}>
-					{children.map((child, index) => renderEntry(child, depth + 1, index === children.length - 1))}
-				</TreeNodeContent>
-			</TreeNode>
-		);
-	};
-
+	const [expanded, setExpanded] = React.useState<Set<string>>(new Set());
+	const treeEntries = React.useMemo(() => {
+		const result = new Map<string, WorkspaceTreeEntry>();
+		const addEntries = (items: WorkspaceTreeEntry[]) => {
+			for (const item of items) {
+				result.set(item.path, item);
+				if (item.children) addEntries(item.children);
+			}
+		};
+		addEntries(entries);
+		return result;
+	}, [entries]);
+	const expandedItems = React.useMemo(() => [...expanded], [expanded]);
+	const setExpandedItems = React.useCallback((next: string[] | ((current: string[]) => string[])) => {
+		setExpanded((current) => new Set(typeof next === 'function' ? next([...current]) : next));
+	}, []);
+	const tree = useTree<WorkspaceTreeEntry>({
+		dataLoader: {
+			getChildren: (itemId) =>
+				itemId === breadcrumbRootId
+					? entries.map((entry) => entry.path)
+					: treeEntries.get(itemId)?.children?.map((entry) => entry.path) ?? [],
+			getItem: (itemId) =>
+				itemId === breadcrumbRootId
+					? ({ name: 'Workspace', path: breadcrumbRootId, type: 'directory', children: entries } as WorkspaceTreeEntry)
+					: treeEntries.get(itemId)!,
+		},
+		features: [syncDataLoaderFeature, hotkeysCoreFeature],
+		getItemName: (item) => item.getItemData().name,
+		indent: 14,
+		isItemFolder: (item) => item.getItemData().type === 'directory',
+		rootItemId: breadcrumbRootId,
+		state: { expandedItems },
+		setExpandedItems,
+	});
+	React.useEffect(() => {
+		tree.rebuildTree();
+	}, [entries, tree]);
 	return (
-		<TreeProvider animateExpand={false} selectable={false} showLines={false}>
-			<TreeView className="p-1" role="tree">
-				{entries.map((entry, index) => renderEntry(entry, 0, index === entries.length - 1))}
-			</TreeView>
-		</TreeProvider>
+		<Tree className="space-y-0.5 p-1" indent={14} tree={tree}>
+			{tree.getItems().map((item) => (
+				<BreadcrumbTreeItem
+					key={item.getId()}
+					entry={item.getItemData()}
+					item={item}
+					onFileSelect={onFileSelect}
+				/>
+			))}
+		</Tree>
 	);
 }
 
