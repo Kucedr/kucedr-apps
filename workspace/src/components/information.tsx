@@ -22,7 +22,7 @@ export function FileInformation({ file }: FileInformationProps) {
 	return (
 		<div
 			data-slot="file-information"
-			className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground"
+			className="flex min-w-0 flex-1 self-center flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground"
 		>
 			{typeof file?.size === 'number' ? <span>{formatFileSize(file.size)}</span> : null}
 			{file?.createdAt ? (

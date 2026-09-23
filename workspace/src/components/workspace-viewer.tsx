@@ -259,7 +259,7 @@ export function WorkspaceViewer({
 				>
 					<FileInformation file={file} />
 					{kind === 'markdown' && !loading ? (
-						<div className="ml-auto">
+						<div className="ml-auto flex self-center items-center">
 							<FormatToggle
 								formatted={markdownMode === 'preview'}
 								onFormattedChange={(formatted) =>
