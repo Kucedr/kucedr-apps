@@ -107,13 +107,14 @@ export function WorkspaceBreadcrumb({
 					/>
 				</DropdownMenuContent>
 			</DropdownMenu>
+			<ChevronRight aria-hidden="true" className="mx-0.5 size-3 shrink-0 text-muted-foreground" />
 			{segments.map((segment, index) => {
 				const segmentPath = segments.slice(0, index + 1).join(separator);
 				const isFile = index === segments.length - 1;
 				const items = findWorkspaceEntry(entries, segmentPath)?.children ?? [];
 				return (
 					<React.Fragment key={segmentPath}>
-						{index > 0 ? <ChevronRight className="mx-0.5 size-3 shrink-0 text-muted-foreground" /> : null}
+						{index > 0 ? <ChevronRight aria-hidden="true" className="mx-0.5 size-3 shrink-0 text-muted-foreground" /> : null}
 						{isFile ? (
 							<span className="min-w-0 truncate font-medium" title={path}>
 								{segment}
