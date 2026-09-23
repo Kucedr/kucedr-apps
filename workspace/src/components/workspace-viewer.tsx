@@ -10,6 +10,7 @@ import { FileInformation } from '@/components/information';
 import { FormatToggle } from '@/components/format-toggle';
 import { Tabs } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { showNativeContextMenu } from '@/lib/menu';
 import { cn } from '@/lib/utils';
 import { isUnreadableBinaryError } from '@/lib/binary';
@@ -39,6 +40,7 @@ interface WorkspaceViewerProps {
 	markdownMode: 'source' | 'preview';
 	onChange: (content: string) => void;
 	onFileSelect: (entry: WorkspaceTreeEntry) => void;
+	onFontSizeChange: (fontSize: number) => void;
 	onMarkdownModeChange: (mode: 'source' | 'preview') => void;
 	onRename: () => void;
 	onSave: () => Promise<boolean>;
@@ -61,6 +63,7 @@ export function WorkspaceViewer({
 	markdownMode,
 	onChange,
 	onFileSelect,
+	onFontSizeChange,
 	onMarkdownModeChange,
 	onRename,
 	onSave,
@@ -76,6 +79,7 @@ export function WorkspaceViewer({
 	const [findQuery, setFindQuery] = useState('');
 	const [imageZoom, setImageZoom] = useState(1);
 	const searchable = kind === 'text' || kind === 'markdown' || kind === 'mermaid';
+	const textFile = kind === 'text' || kind === 'markdown' || kind === 'mermaid';
 	const findMatchCount = useMemo(() => countMatches(content, findQuery), [content, findQuery]);
 	const onFindReady = useCallback((controls: FileFindControls | null) => {
 		setFileFindControls(controls);
