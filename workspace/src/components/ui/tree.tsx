@@ -21,7 +21,9 @@ export function Tree({
 				{...props}
 				className={cn('flex flex-col', className)}
 				style={{ '--tree-indent': `${indent}px`, ...props.style } as React.CSSProperties}
-			/>
+			>
+				{children}
+			</div>
 		</TreeContext.Provider>
 	);
 }

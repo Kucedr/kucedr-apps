@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type DragEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type DragEvent } from 'react';
 import { hotkeysCoreFeature, syncDataLoaderFeature } from '@headless-tree/core';
 import { useTree } from '@headless-tree/react';
 import type { WorkspaceTreeEntry } from '@kucedr/sdk';
@@ -98,6 +98,10 @@ export function AppSidebar({
 		addEntries(regularFiles);
 		return entries;
 	}, [regularFiles]);
+	const expandedItems = useMemo(() => [...expanded], [expanded]);
+	const setExpandedItems = useCallback((next: string[] | ((current: string[]) => string[])) => {
+		setExpanded((current) => new Set(typeof next === 'function' ? next([...current]) : next));
+	}, []);
 	const tree = useTree<WorkspaceTreeEntry>({
 		dataLoader: {
 			getChildren: (itemId) =>
@@ -114,8 +118,8 @@ export function AppSidebar({
 		indent: 14,
 		isItemFolder: (item) => item.getItemData().type === 'directory',
 		rootItemId: workspaceRootId,
-		state: { expandedItems: [...expanded] },
-		setExpandedItems: (next) => setExpanded(new Set(typeof next === 'function' ? next([...expanded]) : next)),
+		state: { expandedItems },
+		setExpandedItems,
 	});
 	useEffect(() => {
 		if (!searchQuery.trim()) return;
