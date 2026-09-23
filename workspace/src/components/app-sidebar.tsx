@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type DragEvent } from 'react';
 import { hotkeysCoreFeature, syncDataLoaderFeature } from '@headless-tree/core';
 import { useTree } from '@headless-tree/react';
-import type { WorkspaceTreeEntry } from '@kucedr/sdk';
+import { app, isKucedr, type WorkspaceTreeEntry } from '@kucedr/sdk';
 
 import { HeadlessTreeItem } from '@/components/headless-tree-item';
 import { Tree } from '@/components/ui/tree';
@@ -12,6 +12,7 @@ import { rebaseWorkspacePath } from '@/lib/rebase';
 import { collectDirectoryPaths } from '@/lib/tree';
 import { isWorkspacePathWithin } from '@/lib/within';
 import { filterWorkspaceEntries } from '@/lib/filter';
+import { workspaceExpandedFoldersKey } from '@/lib/settings';
 
 const hiddenWorkspacePaths = new Set<string>([
 	'AGENTS.md',
@@ -71,6 +72,7 @@ export function AppSidebar({
 	renaming,
 }: AppSidebarProps) {
 	const [expanded, setExpanded] = useState<Set<string>>(new Set());
+	const [expandedLoaded, setExpandedLoaded] = useState(false);
 	const [draggedEntry, setDraggedEntry] = useState<WorkspaceTreeEntry | null>(null);
 	const [dropTargetPath, setDropTargetPath] = useState<string | null>(null);
 	const [dropError, setDropError] = useState('');
@@ -98,6 +100,44 @@ export function AppSidebar({
 		addEntries(regularFiles);
 		return entries;
 	}, [regularFiles]);
+	useEffect(() => {
+		let active = true;
+		if (!isKucedr()) {
+			setExpandedLoaded(true);
+			return () => {
+				active = false;
+			};
+		}
+		void app
+			.getAppStoreValue<unknown>(workspaceExpandedFoldersKey)
+			.then((stored) => {
+				if (!active || !Array.isArray(stored)) return;
+				setExpanded(new Set(stored.filter((path): path is string => typeof path === 'string')));
+			})
+			.catch(() => undefined)
+			.finally(() => {
+				if (active) setExpandedLoaded(true);
+			});
+		return () => {
+			active = false;
+		};
+	}, []);
+	useEffect(() => {
+		if (!expandedLoaded || !isKucedr()) return;
+		void app.setAppStoreValue(workspaceExpandedFoldersKey, [...expanded]);
+	}, [expanded, expandedLoaded]);
+	useEffect(() => {
+		if (!expandedLoaded || workspaceLoading) return;
+		const folderPaths = new Set(
+			[...treeEntries.values()]
+				.filter((entry) => entry.type === 'directory')
+				.map((entry) => entry.path)
+		);
+		setExpanded((current) => {
+			const next = new Set([...current].filter((path) => folderPaths.has(path)));
+			return next.size === current.size ? current : next;
+		});
+	}, [expandedLoaded, treeEntries, workspaceLoading]);
 	const expandedItems = useMemo(() => [...expanded], [expanded]);
 	const setExpandedItems = useCallback((next: string[] | ((current: string[]) => string[])) => {
 		setExpanded((current) => new Set(typeof next === 'function' ? next([...current]) : next));
