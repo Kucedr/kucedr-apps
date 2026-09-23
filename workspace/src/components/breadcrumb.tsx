@@ -34,7 +34,7 @@ function WorkspaceBreadcrumbTree({
 		return (
 			<TreeNode key={entry.path} isLast={isLast} level={depth} nodeId={entry.path}>
 				<TreeNodeTrigger
-					expandOnClick={isDirectory}
+					expandOnClick={hasChildren}
 					className="mx-0 h-7 gap-1.5 rounded-sm px-1.5 py-0 text-xs"
 					onClick={() => {
 						if (!isDirectory) onFileSelect(entry);
