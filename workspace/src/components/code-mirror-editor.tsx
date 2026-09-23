@@ -226,6 +226,7 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorHandle, CodeMirrorEdi
 		const editabilityRef = useRef(new Compartment());
 		const languageRef = useRef(new Compartment());
 		const themeRef = useRef(new Compartment());
+		const fontSizeRef = useRef(new Compartment());
 		const layoutRef = useRef(new Compartment());
 		onChangeRef.current = onChange;
 		onSaveRef.current = onSave;
@@ -327,13 +328,13 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorHandle, CodeMirrorEdi
 								: syntaxHighlighting(defaultHighlightStyle, { fallback: true })
 							: syntaxHighlighting(markdownHighlight, { fallback: true })
 					),
+					fontSizeRef.current.of(EditorView.theme({ '&': { fontSize: `${fontSize}px` } })),
 					...(code
 						? [
 								layoutRef.current.of([
 									...(lineNumbersVisible ? [lineNumbers()] : []),
 									...(foldable ? [foldGutter()] : []),
 									...(wordWrap ? [EditorView.lineWrapping] : []),
-									EditorView.theme({ '&': { fontSize: `${fontSize}px` } }),
 								]),
 								codeEditorTheme,
 								searchHighlight,
@@ -399,10 +400,19 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorHandle, CodeMirrorEdi
 					...(lineNumbersVisible ? [lineNumbers()] : []),
 					...(foldable ? [foldGutter()] : []),
 					...(wordWrap ? [EditorView.lineWrapping] : []),
-					EditorView.theme({ '&': { fontSize: `${fontSize}px` } }),
 				]),
 			});
-		}, [code, foldable, fontSize, lineNumbersVisible, wordWrap]);
+		}, [code, foldable, lineNumbersVisible, wordWrap]);
+
+		useEffect(() => {
+			const view = viewRef.current;
+			if (!view) return;
+			view.dispatch({
+				effects: fontSizeRef.current.reconfigure(
+					EditorView.theme({ '&': { fontSize: `${fontSize}px` } })
+				),
+			});
+		}, [fontSize]);
 
 		useEffect(() => {
 			const view = viewRef.current;
