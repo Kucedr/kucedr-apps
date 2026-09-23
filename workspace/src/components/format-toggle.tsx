@@ -10,12 +10,15 @@ export function FormatToggle({ formatted, onFormattedChange }: FormatToggleProps
 	return (
 		<ToggleGroup
 			type="single"
-			value={formatted ? 'formatted' : ''}
-			onValueChange={(value) => onFormattedChange(value === 'formatted')}
-			aria-label="Markdown formatting"
+			value={formatted ? 'text' : 'raw'}
+			onValueChange={(value) => onFormattedChange(value === 'text')}
+			aria-label="Markdown view"
 		>
-			<ToggleGroupItem value="formatted" aria-label="Formatted view">
-				Formatted
+			<ToggleGroupItem value="raw" aria-label="Raw Markdown">
+				Raw
+			</ToggleGroupItem>
+			<ToggleGroupItem value="text" aria-label="Formatted text">
+				Text
 			</ToggleGroupItem>
 		</ToggleGroup>
 	);
