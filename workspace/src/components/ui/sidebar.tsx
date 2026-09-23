@@ -22,7 +22,7 @@ interface SidebarProviderProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const SidebarProvider = React.forwardRef<HTMLDivElement, SidebarProviderProps>(
-  ({ className, defaultOpen = true, open: openProp, onOpenChange, ...props }, ref) => {
+  ({ className, defaultOpen = true, open: openProp, onOpenChange, style, ...props }, ref) => {
     const [internalOpen, setInternalOpen] = React.useState(defaultOpen)
     const open = openProp ?? internalOpen
     const setOpen = React.useCallback(
@@ -43,6 +43,7 @@ const SidebarProvider = React.forwardRef<HTMLDivElement, SidebarProviderProps>(
           ref={ref}
           data-slot="sidebar-wrapper"
           className={cn("group/sidebar-wrapper flex min-h-0 w-full", className)}
+          style={{ "--sidebar-width": "240px", ...style } as React.CSSProperties}
           {...props}
         />
       </SidebarContext.Provider>
@@ -53,11 +54,10 @@ SidebarProvider.displayName = "SidebarProvider"
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   collapsible?: "offcanvas" | "none"
-  width?: number
 }
 
 const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
-  ({ children, className, collapsible = "offcanvas", style, width = 240, ...props }, ref) => {
+  ({ children, className, collapsible = "offcanvas", style, ...props }, ref) => {
     const { open } = useSidebar()
     const state = open || collapsible === "none" ? "expanded" : "collapsed"
 
@@ -68,17 +68,17 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         data-state={state}
         data-collapsible={state === "collapsed" ? collapsible : ""}
         className={cn(
-          "group relative h-full w-(--sidebar-width) shrink-0 transition-[width] duration-200 ease-linear motion-reduce:transition-none",
+          "group relative h-full w-(--sidebar-width) shrink-0 transition-[width] duration-200 ease-linear motion-reduce:transition-none group-data-[resizing=true]/sidebar-wrapper:transition-none",
           "data-[collapsible=offcanvas]:w-0",
           className,
         )}
-        style={{ "--sidebar-width": `${width}px`, ...style } as React.CSSProperties}
+        style={style}
         {...props}
       >
         <div
           data-slot="sidebar-container"
           className={cn(
-            "absolute inset-y-0 left-0 z-10 flex h-full w-(--sidebar-width) transition-transform duration-200 ease-linear motion-reduce:transition-none",
+            "absolute inset-y-0 left-0 z-10 flex h-full w-(--sidebar-width) transition-transform duration-200 ease-linear motion-reduce:transition-none group-data-[resizing=true]/sidebar-wrapper:transition-none",
             "group-data-[collapsible=offcanvas]:-translate-x-full",
           )}
         >
@@ -101,7 +101,7 @@ const SidebarContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTM
     <div
       ref={ref}
       data-slot="sidebar-content"
-      className={cn("flex min-h-0 flex-1 flex-col overflow-hidden", className)}
+      className={cn("flex min-h-0 flex-1 flex-col overflow-hidden group-data-[resizing=true]/sidebar-wrapper:pointer-events-none", className)}
       {...props}
     />
   ),
@@ -125,7 +125,7 @@ const SidebarInset = React.forwardRef<HTMLElement, React.HTMLAttributes<HTMLElem
     <main
       ref={ref}
       data-slot="sidebar-inset"
-      className={cn("relative flex min-h-0 min-w-0 flex-1 flex-col bg-background", className)}
+      className={cn("relative flex min-h-0 min-w-0 flex-1 flex-col bg-background group-data-[resizing=true]/sidebar-wrapper:transition-none", className)}
       {...props}
     />
   ),

@@ -102,6 +102,7 @@ export default function App() {
 	const [deleteError, setDeleteError] = useState('');
 	const [deleting, setDeleting] = useState(false);
 	const [sidebarWidth, setSidebarWidth] = useState(sidebarDefaultWidth);
+	const [sidebarResizing, setSidebarResizing] = useState(false);
 	const [sidebarOpen, setSidebarOpen] = useState(true);
 	const [view, setView] = useState<'workspace' | 'settings'>('workspace');
 	const [workspaceSettings, setWorkspaceSettings] = useState<WorkspaceSettings>(
@@ -113,6 +114,15 @@ export default function App() {
 	const [globalSearchQuery, setGlobalSearchQuery] = useState('');
 	const [fileFindRequest, setFileFindRequest] = useState(0);
 	const sidebarSearchInputRef = useRef<HTMLInputElement>(null);
+	const sidebarResizeRef = useRef<{
+		pointerId: number;
+		startWidth: number;
+		startX: number;
+		moved: boolean;
+		previousCursor: string;
+		previousUserSelect: string;
+	} | null>(null);
+	const suppressSidebarResizeClickRef = useRef(false);
 	const globalSearchInputRef = useRef<HTMLInputElement>(null);
 	const selectedPathRef = useRef<string | null>(null);
 	const selectedContentRef = useRef('');
@@ -680,25 +690,49 @@ export default function App() {
 		return movedPath;
 	}
 
+	function finishSidebarResize(event: PointerEvent<HTMLButtonElement>) {
+		const resize = sidebarResizeRef.current;
+		if (!resize || resize.pointerId !== event.pointerId) return;
+		if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+			event.currentTarget.releasePointerCapture(event.pointerId);
+		}
+		document.body.style.cursor = resize.previousCursor;
+		document.body.style.userSelect = resize.previousUserSelect;
+		suppressSidebarResizeClickRef.current = resize.moved;
+		sidebarResizeRef.current = null;
+		setSidebarResizing(false);
+	}
+
 	function startSidebarResize(event: PointerEvent<HTMLButtonElement>) {
+		if (event.button !== 0) return;
 		event.preventDefault();
-		const startX = event.clientX;
-		const startWidth = sidebarWidth;
-
-		const resize = (moveEvent: globalThis.PointerEvent) => {
-			const nextWidth = Math.min(
-				sidebarMaxWidth,
-				Math.max(sidebarMinWidth, startWidth + moveEvent.clientX - startX)
-			);
-			setSidebarWidth(nextWidth);
+		event.stopPropagation();
+		sidebarResizeRef.current = {
+			pointerId: event.pointerId,
+			startWidth: sidebarWidth,
+			startX: event.clientX,
+			moved: false,
+			previousCursor: document.body.style.cursor,
+			previousUserSelect: document.body.style.userSelect,
 		};
-		const stop = () => {
-			window.removeEventListener('pointermove', resize);
-			window.removeEventListener('pointerup', stop);
-		};
+		suppressSidebarResizeClickRef.current = false;
+		document.body.style.cursor = 'col-resize';
+		document.body.style.userSelect = 'none';
+		event.currentTarget.setPointerCapture(event.pointerId);
+		setSidebarResizing(true);
+	}
 
-		window.addEventListener('pointermove', resize);
-		window.addEventListener('pointerup', stop, { once: true });
+	function resizeSidebar(event: PointerEvent<HTMLButtonElement>) {
+		const resize = sidebarResizeRef.current;
+		if (!resize || resize.pointerId !== event.pointerId) return;
+		event.preventDefault();
+		const displacement = event.clientX - resize.startX;
+		resize.moved ||= Math.abs(displacement) > 2;
+		const nextWidth = Math.min(
+			sidebarMaxWidth,
+			Math.max(sidebarMinWidth, resize.startWidth + displacement)
+		);
+		setSidebarWidth((current) => (current === nextWidth ? current : nextWidth));
 	}
 
 	const sidebar = (
