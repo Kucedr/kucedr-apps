@@ -9,6 +9,7 @@ import { renderMermaid } from '@/lib/mermaid';
 interface MermaidEditorProps {
 	canSave: boolean;
 	content: string;
+	fontSize: number;
 	isDark: boolean;
 	onChange: (content: string) => void;
 	onFindReady?: (controls: FileFindControls | null) => void;
@@ -19,6 +20,7 @@ interface MermaidEditorProps {
 export default function MermaidEditor({
 	canSave,
 	content,
+	fontSize,
 	isDark,
 	onChange,
 	onFindReady,
@@ -89,6 +91,7 @@ export default function MermaidEditor({
 						key={path}
 						canSave={canSave}
 						className="h-full min-h-0 [&_.cm-content]:min-h-full [&_.cm-editor]:h-full"
+						fontSize={fontSize}
 						onChange={onChange}
 						onSave={onSave}
 						value={content}
