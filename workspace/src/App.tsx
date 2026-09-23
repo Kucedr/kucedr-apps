@@ -947,6 +947,11 @@ export default function App() {
 						loading={selectedLoading}
 						markdownMode={markdownMode}
 						mediaUrl={selectedMediaUrl}
+						onFontSizeChange={(fontSize) => {
+							const settings = { ...workspaceSettings, fontSize };
+							setWorkspaceSettings(settings);
+							if (isKucedr()) void app.setAppStoreValue(workspaceSettingsKey, settings);
+						}}
 						onChange={(content) => {
 							selectedContentRef.current = content;
 							setSelectedContent(content);
