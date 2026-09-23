@@ -114,6 +114,7 @@ export function AppSidebar({
 		indent: 14,
 		isItemFolder: (item) => item.getItemData().type === 'directory',
 		rootItemId: workspaceRootId,
+		state: { expandedItems: [...expanded] },
 		setExpandedItems: (next) => setExpanded(new Set(typeof next === 'function' ? next([...expanded]) : next)),
 	});
 	useEffect(() => {
@@ -335,6 +336,7 @@ export function AppSidebar({
 									renameName={renameName}
 									renameTarget={renameTarget}
 									renaming={renaming}
+									selected={entry.path === selectedWorkspacePath}
 									onDragEnd={endDrag}
 									onDragLeave={dragLeaveTarget}
 									onDragOver={dragOverEntry}

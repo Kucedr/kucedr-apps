@@ -34,6 +34,7 @@ export interface HeadlessTreeItemProps {
 	renameName: string;
 	renameTarget: WorkspaceTreeEntry | null;
 	renaming: boolean;
+	selected: boolean;
 }
 
 export function HeadlessTreeItem({
@@ -62,6 +63,7 @@ export function HeadlessTreeItem({
 	renameName,
 	renameTarget,
 	renaming,
+	selected,
 }: HeadlessTreeItemProps) {
 	const isDirectory = entry.type === 'directory';
 	const isDropTarget = dropTargetPath === entry.path;
@@ -119,10 +121,11 @@ export function HeadlessTreeItem({
 		>
 			<TreeItemLabel
 				aria-busy={movingPath === entry.path || undefined}
-				aria-current={item.isSelected() ? 'page' : undefined}
+				aria-current={selected ? 'page' : undefined}
 				aria-describedby="workspace-drag-instructions"
 				aria-keyshortcuts="Backspace Delete"
 				className={cn(
+					selected && 'bg-sidebar-accent text-sidebar-foreground',
 					isDropTarget && !dropError && 'bg-sidebar-accent text-sidebar-foreground ring-1 ring-sidebar-ring',
 					isDropTarget && dropError && 'ring-1 ring-destructive'
 				)}
