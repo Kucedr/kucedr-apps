@@ -40,7 +40,7 @@ export function TreeItem({
 				{...itemProps}
 				{...props}
 				aria-expanded={item.isFolder() ? item.isExpanded() : undefined}
-				className={cn('relative select-none outline-none', className)}
+				className={cn('group relative select-none outline-none', className)}
 				data-folder={item.isFolder() || undefined}
 				data-selected={item.isSelected() || undefined}
 				style={{ paddingInlineStart: item.getItemMeta().level * (tree?.indent ?? 20), ...props.style }}
