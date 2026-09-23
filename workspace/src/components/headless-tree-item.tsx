@@ -145,7 +145,7 @@ export function HeadlessTreeItem({
 				}}
 			>
 				<span className="-order-1 flex min-w-0 flex-1 items-center gap-1.5">
-					{isDirectory ? item.isExpanded() ? <FolderOpenIcon className="size-3.5 text-sidebar-muted" /> : <FolderIcon className="size-3.5 text-sidebar-muted" /> : <FileIcon className="size-3.5 text-sidebar-muted" />}
+					{isDirectory ? item.isExpanded() ? <FolderOpenIcon className="size-3.5 shrink-0 text-sidebar-muted" /> : <FolderIcon className="size-3.5 shrink-0 text-sidebar-muted" /> : <FileIcon className="size-3.5 shrink-0 text-sidebar-muted" />}
 					{editing ? (
 						<Input ref={renameInputRef} autoFocus aria-invalid={Boolean(renameError)} value={renameName} disabled={renaming} className="h-5 min-w-0 flex-1 rounded-sm px-1.5 text-[12px] shadow-none" onBlur={() => { if (cancelBlurRef.current) { cancelBlurRef.current = false; return; } onRenameCommit(); }} onChange={(event) => onRenameNameChange(event.target.value)} onClick={(event) => event.stopPropagation()} onContextMenu={(event) => event.stopPropagation()} onDoubleClick={(event) => event.stopPropagation()} onFocus={(event) => { const extensionStart = renameName.lastIndexOf('.'); event.currentTarget.setSelectionRange(0, entry.type === 'file' && extensionStart > 0 ? extensionStart : renameName.length); }} onKeyDown={(event) => { event.stopPropagation(); if (event.key === 'Enter') { event.preventDefault(); event.currentTarget.blur(); } if (event.key === 'Escape') { event.preventDefault(); cancelBlurRef.current = true; onRenameCancel(); } }} onPointerDown={(event) => event.stopPropagation()} />
 					) : <span className="truncate">{entry.name}</span>}
