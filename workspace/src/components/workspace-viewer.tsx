@@ -1,5 +1,5 @@
 import { FileWarning, FileText, LoaderCircle, RotateCcw, Search, ZoomIn, ZoomOut } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { WorkspaceFileKind, WorkspaceTreeEntry } from '@kucedr/sdk';
 import type { WorkspaceSettings } from '@/lib/settings';
 
@@ -15,6 +15,7 @@ import { showNativeContextMenu } from '@/lib/menu';
 import { cn } from '@/lib/utils';
 import { isUnreadableBinaryError } from '@/lib/binary';
 import { countMatches } from '@/lib/matches';
+import { formatFile, formattableExtensions } from '@/lib/format';
 
 const editableWorkspaceKinds = new Set<WorkspaceFileKind>([
 	'markdown',
@@ -78,6 +79,14 @@ export function WorkspaceViewer({
 	const [findOpen, setFindOpen] = useState(false);
 	const [findQuery, setFindQuery] = useState('');
 	const [imageZoom, setImageZoom] = useState(1);
+	const [formatting, setFormatting] = useState(false);
+	const [formatError, setFormatError] = useState('');
+	const currentPath = useRef(path);
+	const currentContent = useRef(content);
+	currentPath.current = path;
+	currentContent.current = content;
+	const extension = path?.split('.').pop()?.toLowerCase() ?? '';
+	const canFormat = (kind === 'text' || kind === 'markdown') && formattableExtensions.has(extension);
 	const visibleMarkdownMode = kind === 'markdown' && findOpen ? 'source' : markdownMode;
 	const searchable = kind === 'text' || kind === 'markdown' || kind === 'mermaid';
 	const textFile = kind === 'text' || kind === 'markdown' || kind === 'mermaid';
@@ -93,6 +102,23 @@ export function WorkspaceViewer({
 	const openFind = useCallback(() => {
 		setFindOpen(true);
 	}, []);
+	const format = useCallback(async () => {
+		if (!path || !canFormat || formatting || loading) return;
+		setFormatting(true);
+		setFormatError('');
+		try {
+			const formatted = await formatFile(path, content);
+			if (currentPath.current === path && currentContent.current === content && formatted !== content) {
+				onChange(formatted);
+			}
+		} catch (error) {
+			if (currentPath.current === path) {
+				setFormatError(error instanceof Error ? error.message : 'Unable to format file.');
+			}
+		} finally {
+			setFormatting(false);
+		}
+	}, [canFormat, content, formatting, loading, onChange, path]);
 	const updateFindQuery = useCallback(
 		(query: string) => {
 			setFindQuery(query);
@@ -104,6 +130,7 @@ export function WorkspaceViewer({
 
 	useEffect(() => {
 		clearFind();
+		setFormatError('');
 	}, [clearFind, path]);
 
 	useEffect(() => {
@@ -200,6 +227,12 @@ export function WorkspaceViewer({
 										{ type: 'separator' } as const,
 									]
 								: []),
+							...(canFormat
+								? [
+										{ id: 'format', label: 'Format File', enabled: !loading && !formatting } as const,
+										{ type: 'separator' } as const,
+									]
+								: []),
 							{ id: 'rename', label: 'Rename File' },
 							{ type: 'separator' },
 							{ id: 'copy-path', label: 'Copy Path' },
@@ -208,6 +241,7 @@ export function WorkspaceViewer({
 							save: async () => {
 								await onSave();
 							},
+							format: () => void format(),
 							'show-preview': () => onMarkdownModeChange('preview'),
 							'show-source': () => onMarkdownModeChange('source'),
 							rename: onRename,
@@ -294,7 +328,17 @@ export function WorkspaceViewer({
 					className="flex min-h-8 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-t bg-muted/20 px-2 py-1 sm:px-3"
 				>
 					<FileInformation file={file} />
+					{formatError ? (
+						<span className="max-w-64 truncate text-[11px] text-destructive" title={formatError} role="alert">
+							{formatError}
+						</span>
+					) : null}
 					<div className="ml-auto flex self-center items-center gap-2">
+						{canFormat && !loading ? (
+							<Button type="button" variant="ghost" size="sm" className="h-7" disabled={formatting} onClick={() => void format()}>
+								{formatting ? <LoaderCircle className="animate-spin" /> : null} Format
+							</Button>
+						) : null}
 						{textFile && !loading ? (
 							<label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
 								<span>Font</span>

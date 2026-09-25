@@ -419,7 +419,6 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorHandle, CodeMirrorEdi
 			if (!view || view.state.doc.toString() === value) return;
 			view.dispatch({
 				changes: { from: 0, to: view.state.doc.length, insert: value },
-				annotations: Transaction.addToHistory.of(false),
 			});
 		}, [value]);
 
