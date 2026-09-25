@@ -1,12 +1,25 @@
-export const formattableExtensions = new Set([
-	'css', 'graphql', 'gql', 'htm', 'html', 'js', 'jsx', 'json', 'json5', 'jsonc',
-	'less', 'md', 'mdx', 'mjs', 'cjs', 'mts', 'cts', 'py', 'pyi', 'scss', 'ts', 'tsx',
-	'vue', 'yaml', 'yml',
-]);
+export const formatOptions = [
+	{ value: 'json', label: 'JSON' },
+	{ value: 'jsonc', label: 'JSONC' },
+	{ value: 'json5', label: 'JSON5' },
+	{ value: 'javascript', label: 'JavaScript / JSX' },
+	{ value: 'typescript', label: 'TypeScript / TSX' },
+	{ value: 'python', label: 'Python' },
+	{ value: 'css', label: 'CSS' },
+	{ value: 'scss', label: 'SCSS' },
+	{ value: 'less', label: 'Less' },
+	{ value: 'html', label: 'HTML' },
+	{ value: 'vue', label: 'Vue' },
+	{ value: 'markdown', label: 'Markdown' },
+	{ value: 'mdx', label: 'MDX' },
+	{ value: 'yaml', label: 'YAML' },
+	{ value: 'graphql', label: 'GraphQL' },
+] as const;
 
-export async function formatFile(path: string, content: string): Promise<string> {
-	const extension = path.split('.').pop()?.toLowerCase();
-	if (extension === 'py' || extension === 'pyi') {
+export type FormatType = (typeof formatOptions)[number]['value'];
+
+export async function formatFile(format: FormatType, content: string): Promise<string> {
+	if (format === 'python') {
 		const { default: init, PositionEncoding, Workspace } = await import('@astral-sh/ruff-wasm-web');
 		await init();
 		const workspace = new Workspace({}, PositionEncoding.Utf16);
@@ -18,22 +31,14 @@ export async function formatFile(path: string, content: string): Promise<string>
 	}
 
 	const prettier = await import('prettier/standalone');
-	switch (extension) {
-		case 'js':
-		case 'jsx':
-		case 'mjs':
-		case 'cjs':
+	switch (format) {
+		case 'javascript':
 			return prettier.format(content, {
-				filepath: path,
 				parser: 'babel',
 				plugins: [await import('prettier/plugins/babel'), await import('prettier/plugins/estree')],
 			});
-		case 'ts':
-		case 'tsx':
-		case 'mts':
-		case 'cts':
+		case 'typescript':
 			return prettier.format(content, {
-				filepath: path,
 				parser: 'typescript',
 				plugins: [await import('prettier/plugins/typescript'), await import('prettier/plugins/estree')],
 			});
@@ -41,24 +46,20 @@ export async function formatFile(path: string, content: string): Promise<string>
 		case 'jsonc':
 		case 'json5':
 			return prettier.format(content, {
-				filepath: path,
-				parser: extension,
+				parser: format,
 				plugins: [await import('prettier/plugins/babel'), await import('prettier/plugins/estree')],
 			});
 		case 'css':
 		case 'scss':
 		case 'less':
 			return prettier.format(content, {
-				filepath: path,
-				parser: extension,
+				parser: format,
 				plugins: [await import('prettier/plugins/postcss')],
 			});
-		case 'htm':
 		case 'html':
 		case 'vue':
 			return prettier.format(content, {
-				filepath: path,
-				parser: extension === 'vue' ? 'vue' : 'html',
+				parser: format,
 				plugins: [
 					await import('prettier/plugins/html'),
 					await import('prettier/plugins/babel'),
@@ -67,11 +68,10 @@ export async function formatFile(path: string, content: string): Promise<string>
 					await import('prettier/plugins/postcss'),
 				],
 			});
-		case 'md':
+		case 'markdown':
 		case 'mdx':
 			return prettier.format(content, {
-				filepath: path,
-				parser: extension === 'mdx' ? 'mdx' : 'markdown',
+				parser: format,
 				plugins: [
 					await import('prettier/plugins/markdown'),
 					await import('prettier/plugins/babel'),
@@ -82,16 +82,12 @@ export async function formatFile(path: string, content: string): Promise<string>
 				],
 			});
 		case 'yaml':
-		case 'yml':
 			return prettier.format(content, {
-				filepath: path,
 				parser: 'yaml',
 				plugins: [await import('prettier/plugins/yaml')],
 			});
 		case 'graphql':
-		case 'gql':
 			return prettier.format(content, {
-				filepath: path,
 				parser: 'graphql',
 				plugins: [await import('prettier/plugins/graphql')],
 			});

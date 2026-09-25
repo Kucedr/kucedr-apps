@@ -15,7 +15,7 @@ import { showNativeContextMenu } from '@/lib/menu';
 import { cn } from '@/lib/utils';
 import { isUnreadableBinaryError } from '@/lib/binary';
 import { countMatches } from '@/lib/matches';
-import { formatFile, formattableExtensions } from '@/lib/format';
+import { formatFile, formatOptions, type FormatType } from '@/lib/format';
 
 const editableWorkspaceKinds = new Set<WorkspaceFileKind>([
 	'markdown',
@@ -85,8 +85,7 @@ export function WorkspaceViewer({
 	const currentContent = useRef(content);
 	currentPath.current = path;
 	currentContent.current = content;
-	const extension = path?.split('.').pop()?.toLowerCase() ?? '';
-	const canFormat = (kind === 'text' || kind === 'markdown') && formattableExtensions.has(extension);
+	const canFormat = kind === 'text' || kind === 'markdown';
 	const visibleMarkdownMode = kind === 'markdown' && findOpen ? 'source' : markdownMode;
 	const searchable = kind === 'text' || kind === 'markdown' || kind === 'mermaid';
 	const textFile = kind === 'text' || kind === 'markdown' || kind === 'mermaid';
@@ -102,12 +101,12 @@ export function WorkspaceViewer({
 	const openFind = useCallback(() => {
 		setFindOpen(true);
 	}, []);
-	const format = useCallback(async () => {
+	const format = useCallback(async (selection: FormatType) => {
 		if (!path || !canFormat || formatting || loading) return;
 		setFormatting(true);
 		setFormatError('');
 		try {
-			const formatted = await formatFile(path, content);
+			const formatted = await formatFile(selection, content);
 			if (currentPath.current === path && currentContent.current === content && formatted !== content) {
 				onChange(formatted);
 			}
@@ -227,13 +226,7 @@ export function WorkspaceViewer({
 										{ type: 'separator' } as const,
 									]
 								: []),
-							...(canFormat
-								? [
-										{ id: 'format', label: 'Format File', enabled: !loading && !formatting } as const,
-										{ type: 'separator' } as const,
-									]
-								: []),
-							{ id: 'rename', label: 'Rename File' },
+			{ id: 'rename', label: 'Rename File' },
 							{ type: 'separator' },
 							{ id: 'copy-path', label: 'Copy Path' },
 						],
@@ -241,8 +234,7 @@ export function WorkspaceViewer({
 							save: async () => {
 								await onSave();
 							},
-							format: () => void format(),
-							'show-preview': () => onMarkdownModeChange('preview'),
+			'show-preview': () => onMarkdownModeChange('preview'),
 							'show-source': () => onMarkdownModeChange('source'),
 							rename: onRename,
 							'copy-path': () => navigator.clipboard.writeText(path),
@@ -335,9 +327,25 @@ export function WorkspaceViewer({
 					) : null}
 					<div className="ml-auto flex self-center items-center gap-2">
 						{canFormat && !loading ? (
-							<Button type="button" variant="ghost" size="sm" className="h-7" disabled={formatting} onClick={() => void format()}>
-								{formatting ? <LoaderCircle className="animate-spin" /> : null} Format
-							</Button>
+							<label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+								{formatting ? <LoaderCircle className="size-3 animate-spin" /> : null}
+								<select
+									defaultValue=""
+									aria-label="Format file as"
+									className="h-7 rounded-md border border-input bg-background px-2 text-xs text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+									disabled={formatting}
+									onChange={(event) => {
+										const selection = event.currentTarget.value as FormatType;
+										event.currentTarget.value = '';
+										void format(selection);
+									}}
+								>
+									<option value="" disabled>Format as…</option>
+									{formatOptions.map((option) => (
+										<option key={option.value} value={option.value}>{option.label}</option>
+									))}
+								</select>
+							</label>
 						) : null}
 						{textFile && !loading ? (
 							<label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
