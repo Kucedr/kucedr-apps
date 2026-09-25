@@ -15,6 +15,7 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
+		"@astral-sh/ruff-wasm-web": "^0.16.9",
 		"@codemirror/commands": "^6.11.0",
 		"@codemirror/lang-markdown": "^6.5.1",
 		"@codemirror/language": "^6.12.4",
@@ -49,6 +50,7 @@
 		"media-chrome": "^4.19.2",
 		"mermaid": "^11.16.1",
 		"motion": "^13.3.0",
+		"prettier": "^3.9.9",
 		"react": "^19.1.1",
 		"react-dom": "^19.1.1",
 		"react-markdown": "^10.1.0",
