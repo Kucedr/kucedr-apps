@@ -15,7 +15,7 @@ import {
 	HighlightStyle,
 	syntaxHighlighting,
 } from '@codemirror/language';
-import { Compartment, EditorState, RangeSetBuilder, Transaction } from '@codemirror/state';
+import { Compartment, EditorState, RangeSetBuilder } from '@codemirror/state';
 import {
 	findNext,
 	findPrevious,
