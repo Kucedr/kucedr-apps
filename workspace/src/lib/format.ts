@@ -59,14 +59,27 @@ export async function formatFile(path: string, content: string): Promise<string>
 			return prettier.format(content, {
 				filepath: path,
 				parser: extension === 'vue' ? 'vue' : 'html',
-				plugins: [await import('prettier/plugins/html')],
+				plugins: [
+					await import('prettier/plugins/html'),
+					await import('prettier/plugins/babel'),
+					await import('prettier/plugins/estree'),
+					await import('prettier/plugins/typescript'),
+					await import('prettier/plugins/postcss'),
+				],
 			});
 		case 'md':
 		case 'mdx':
 			return prettier.format(content, {
 				filepath: path,
 				parser: extension === 'mdx' ? 'mdx' : 'markdown',
-				plugins: [await import('prettier/plugins/markdown')],
+				plugins: [
+					await import('prettier/plugins/markdown'),
+					await import('prettier/plugins/babel'),
+					await import('prettier/plugins/estree'),
+					await import('prettier/plugins/typescript'),
+					await import('prettier/plugins/html'),
+					await import('prettier/plugins/postcss'),
+				],
 			});
 		case 'yaml':
 		case 'yml':
